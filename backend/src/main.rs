@@ -1,13 +1,17 @@
 use axum::{
     extract::{Json, State},
     routing::get,
-    Router
+    Router,
 };
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 use dotenv;
 use openai::{chat::{ChatCompletionMessage, ChatCompletionMessageRole as Role, ChatCompletion}, set_key};
 use std::{collections::HashMap, sync::Arc};
+use std::env;
+use tracing_subscriber::{EnvFilter, prelude::*};
+
+mod public;
 
 struct AppState {
     conversations: HashMap<String, Vec<ChatCompletionMessage>>,
@@ -22,14 +26,26 @@ struct NewMessage {
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
-    set_key(std::env::var("OPENAI_KEY").unwrap());
-    let app_state = Arc::new(Mutex::new(AppState {
-        conversations: HashMap::new(),
-    }));
+    set_key(env::var("OPENAI_KEY").unwrap());
+    // let app_state = Arc::new(Mutex::new(AppState {
+    //     conversations: HashMap::new(),
+    // }));
+    let stdout = tracing_subscriber::fmt::layer().pretty();
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "backend=debug".into())) // Only record debug and above from your crate
+        .with(stdout) // For the actual logging
+        .init();
+
+    let files = public::get_static_files(&env::var("PUBLIC_PATH").unwrap()).await.expect("to find public files");
+
+    let files = Arc::new(RwLock::new(files));
 
     let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }).post(post_chat))
-        .with_state(app_state);
+        .route("/:name", get(public::file_handler))
+        .route("/", get(public::root_handler))
+        .with_state(files);
+
+
 
     // run it with hyper on localhost:3000
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
@@ -38,6 +54,7 @@ async fn main() {
         .unwrap();
 }
 
+#[allow(dead_code)]
 async fn post_chat(State(state): State<Arc<Mutex<AppState>>>, body: Json<NewMessage>) -> Json<NewMessage> {
     let mut state = state.lock().await;
     if let Some(hist) = state.conversations.get_mut(&body.user) {
