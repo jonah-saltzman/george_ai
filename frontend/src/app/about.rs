@@ -1,6 +1,7 @@
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew_hooks::prelude::*;
+use crate::{fetch, Error};
 
 /// About page
 #[function_component(About)]
@@ -74,37 +75,12 @@ async fn fetch_repo(repo: String) -> Result<Repo, Error> {
     fetch::<Repo>(format!("https://api.github.com/repos/{}", repo)).await
 }
 
-/// You can use reqwest or other crates to fetch your api.
-async fn fetch<T>(url: String) -> Result<T, Error>
-where
-    T: DeserializeOwned,
-{
-    let response = reqwest::get(url).await;
-    if let Ok(data) = response {
-        if let Ok(repo) = data.json::<T>().await {
-            Ok(repo)
-        } else {
-            Err(Error::DeserializeError)
-        }
-    } else {
-        Err(Error::RequestError)
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 struct Repo {
     id: i32,
     name: String,
     full_name: String,
     description: String,
-}
-
-// You can use thiserror to define your errors.
-#[derive(Clone, Debug, PartialEq)]
-enum Error {
-    RequestError,
-    DeserializeError,
-    // etc.
 }
 
 #[cfg(test)]

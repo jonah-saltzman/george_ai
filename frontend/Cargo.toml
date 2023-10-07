@@ -19,6 +19,11 @@ yew-router = "0.17.0"
 yew-hooks = "0.2.0"
 wasm-bindgen = "0.2"
 wasm-logger = "0.2.0"
+gloo-net = "0.4.0"
+serde_json = "1.0.107"
+wasm-bindgen-futures = "0.4.37"
+shared = { version = "0.1.0", path = "../shared" }
+web-sys = { version = "0.3.64", features = ["console"]}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

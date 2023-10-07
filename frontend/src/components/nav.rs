@@ -14,6 +14,7 @@ pub fn nav() -> Html {
                 </Link<AppRoute>>
                 <Link<AppRoute> to={AppRoute::Home} classes="text-emerald-800 underline" >{ "Home" }</Link<AppRoute>>
                 <Link<AppRoute> to={AppRoute::About} classes="text-emerald-800 underline">{ "About" }</Link<AppRoute>>
+                <Link<AppRoute> to={AppRoute::Chat} classes="text-emerald-800 underline">{ "Chat" }</Link<AppRoute>>
             </nav>
         </div>
     }

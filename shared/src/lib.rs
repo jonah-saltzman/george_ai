@@ -1,14 +1,21 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsValue;
+use serde_wasm_bindgen::to_value;
+
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
+pub struct NewMessage {
+    pub user: String,
+    pub msg: String,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl From<NewMessage> for JsValue {
+    fn from(value: NewMessage) -> Self {
+        to_value(&value).unwrap()
+    }
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+impl std::fmt::Display for NewMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}: {}", self.user, self.msg))
     }
 }
